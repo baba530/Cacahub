@@ -1,73 +1,124 @@
--- Başlangıç bildirimi
-pcall(function()
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "VOLCANO HUB | ESG x COPILOT 💀",
-        Text = "Local GUI sahneye çıkıyor...",
-        Duration = 5
-    })
-end)
+local _ENV = (getgenv or getrenv or getfenv)()
+local BETA_VERSION = BETA_VERSION or _ENV.BETA_VERSION
 
--- GUI oluştur
-local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local Scripts = {
+	{
+		PlacesIds = {2753915549, 4442272183, 7449423635},
+		UrlPath = if BETA_VERSION then "BLOX-FRUITS-BETA.lua" else "BloxFruits.luau" 
+	},
+	{
+		PlacesIds = {10260193230},
+		UrlPath = "MemeSea.luau"
+	}
+}
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "VolcanoLocalGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+local fetcher, urls = {}, {}
 
--- Başlık
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0.6, 0, 0.1, 0)
-title.Position = UDim2.new(0.2, 0, 0.05, 0)
-title.Text = "VOLCANO HUB | ESG x COPILOT 💀"
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
-title.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-title.TextColor3 = Color3.fromRGB(255, 85, 0)
-title.Parent = screenGui
-
--- Tuş oluşturma fonksiyonu
-local function createButton(text, yPos, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.6, 0, 0.08, 0)
-    button.Position = UDim2.new(0.2, 0, yPos, 0)
-    button.Text = text
-    button.TextScaled = true
-    button.Font = Enum.Font.Gotham
-    button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Parent = screenGui
-    button.MouseButton1Click:Connect(callback)
+do
+	local last_exec = _ENV.rz_execute_debounce
+	
+	if last_exec and (tick() - last_exec) <= 5 then
+		return nil
+	end
+	
+	_ENV.rz_execute_debounce = tick()
 end
 
--- Volcano işlevleri
-createButton("Auto Farm", 0.2, function()
-    print("Auto Farm aktif 💀")
-    -- Buraya Auto Farm fonksiyonları eklenebilir
-end)
+urls.Owner = "https://raw.githubusercontent.com/tlredz/";
+urls.Repository = urls.Owner .. "Scripts/refs/heads/main/";
+urls.Translator = urls.Repository .. "Translator/";
+urls.Utils = urls.Repository .. "Utils/";
 
-createButton("Boss Teleport", 0.3, function()
-    print("Boss Teleport aktif 💀")
-    -- Boss konumuna teleport kodu buraya
-end)
+do
+	local executor = syn or fluxus
+	local queueteleport = queue_on_teleport or (executor and executor.queue_on_teleport)
+	
+	if not _ENV.rz_added_teleport_queue and type(queueteleport) == "function" then
+		local ScriptSettings = {...}
+		local SettingsCode = ""
+		
+		_ENV.rz_added_teleport_queue = true
+		
+		local Success, EncodedSettings = pcall(function()
+			return game:GetService("HttpService"):JSONEncode(ScriptSettings)
+		end)
+		
+		if Success and EncodedSettings then
+			SettingsCode = "unpack(game:GetService('HttpService'):JSONDecode('" .. EncodedSettings .. "'))"
+		end
+		
+		local SourceCode = ("loadstring(game:HttpGet('%smain.luau'))(%s)"):format(urls.Repository, SettingsCode)
+		
+		if BETA_VERSION then
+			SourceCode = "getgenv().BETA_VERSION=true;" .. SourceCode
+		end
+		
+		pcall(queueteleport, SourceCode)
+	end
+end
 
-createButton("Fruit ESP", 0.4, function()
-    print("Fruit ESP aktif 💀")
-    -- ESP fonksiyonu buraya
-end)
+do
+	if _ENV.rz_error_message then
+		_ENV.rz_error_message:Destroy()
+	end
+	
+	local identifyexecutor = identifyexecutor or (function() return "Unknown" end)
+	
+	local function CreateMessageError(Text)
+		_ENV.loadedFarm = nil
+		_ENV.OnFarm = false
+		
+		local Message = Instance.new("Message", workspace)
+		Message.Text = string.gsub(Text, urls.Owner, "")
+		_ENV.rz_error_message = Message
+		
+		error(Text, 2)
+	end
+	
+	local function formatUrl(Url)
+		for key, path in urls do
+			if Url:find("{" .. key .. "}") then
+				return Url:gsub("{" .. key .. "}", path)
+			end
+		end
+		
+		return Url
+	end
+	
+	function fetcher.get(Url)
+		local success, response = pcall(function()
+			return game:HttpGet(formatUrl(Url))
+		end)
+		
+		if success then
+			return response
+		else
+			CreateMessageError(`[1] [{ identifyexecutor() }] failed to get http/url/raw: { Url }\n>>{ response }<<`)
+		end
+	end
+	
+	function fetcher.load(Url: string, concat: string?)
+		local raw = fetcher.get(Url) .. (if concat then concat else "")
+		local runFunction, errorText = loadstring(raw)
+		
+		if type(runFunction) ~= "function" then
+			CreateMessageError(`[2] [{ identifyexecutor() }] sintax error: { Url }\n>>{ errorText }<<`)
+		else
+			return runFunction
+		end
+	end
+end
 
-createButton("PvP Modu", 0.5, function()
-    print("PvP Modu aktif 💀")
-    -- Camlock, Skill Spam vs.
-end)
+local function IsPlace(Script)
+	if Script.PlacesIds and table.find(Script.PlacesIds, game.PlaceId) then
+		return true
+	elseif Script.GameId and Script.GameId == game.GameId then
+		return true
+	end
+end
 
-createButton("FPS Boost", 0.6, function()
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("BasePart") then
-            v.Material = Enum.Material.SmoothPlastic
-            v.Reflectance = 0
+for _, Script in Scripts do
+	if IsPlace(Script) then
+		return fetcher.load("{Repository}Games/" .. Script.UrlPath)(fetcher, ...)
+	end
         end
-    end
-    print("FPS Boost uygulandı 💀")
-end)
