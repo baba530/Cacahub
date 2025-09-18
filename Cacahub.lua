@@ -1,124 +1,136 @@
-local _ENV = (getgenv or getrenv or getfenv)()
-local BETA_VERSION = BETA_VERSION or _ENV.BETA_VERSION
+-- Auto Restart (Redz Hub tarzı queue_on_teleport)
+local executor = syn or fluxus
+local queueteleport = queue_on_teleport or (executor and executor.queue_on_teleport)
 
-local Scripts = {
-	{
-		PlacesIds = {2753915549, 4442272183, 7449423635},
-		UrlPath = if BETA_VERSION then "BLOX-FRUITS-BETA.lua" else "BloxFruits.luau" 
-	},
-	{
-		PlacesIds = {10260193230},
-		UrlPath = "MemeSea.luau"
-	}
-}
-
-local fetcher, urls = {}, {}
-
-do
-	local last_exec = _ENV.rz_execute_debounce
-	
-	if last_exec and (tick() - last_exec) <= 5 then
-		return nil
-	end
-	
-	_ENV.rz_execute_debounce = tick()
+if type(queueteleport) == "function" then
+    local SourceCode = "loadstring(game:HttpGet('https://raw.githubusercontent.com/baba530/Sansarsv2/main/sansarmod.lua'))()"
+    pcall(queueteleport, SourceCode)
 end
 
-urls.Owner = "https://raw.githubusercontent.com/tlredz/";
-urls.Repository = urls.Owner .. "Scripts/refs/heads/main/";
-urls.Translator = urls.Repository .. "Translator/";
-urls.Utils = urls.Repository .. "Utils/";
+-- GUI Setup
+local gui = Instance.new("ScreenGui", game.CoreGui)
 
-do
-	local executor = syn or fluxus
-	local queueteleport = queue_on_teleport or (executor and executor.queue_on_teleport)
-	
-	if not _ENV.rz_added_teleport_queue and type(queueteleport) == "function" then
-		local ScriptSettings = {...}
-		local SettingsCode = ""
-		
-		_ENV.rz_added_teleport_queue = true
-		
-		local Success, EncodedSettings = pcall(function()
-			return game:GetService("HttpService"):JSONEncode(ScriptSettings)
-		end)
-		
-		if Success and EncodedSettings then
-			SettingsCode = "unpack(game:GetService('HttpService'):JSONDecode('" .. EncodedSettings .. "'))"
-		end
-		
-		local SourceCode = ("loadstring(game:HttpGet('%smain.luau'))(%s)"):format(urls.Repository, SettingsCode)
-		
-		if BETA_VERSION then
-			SourceCode = "getgenv().BETA_VERSION=true;" .. SourceCode
-		end
-		
-		pcall(queueteleport, SourceCode)
-	end
-end
+local logoButton = Instance.new("TextButton", gui)
+logoButton.Size = UDim2.new(0, 200, 0, 50)
+logoButton.Position = UDim2.new(0.85, 0, 0.15, 0)
+logoButton.Text = "SANSARSV2xFARM"
+logoButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+logoButton.BackgroundTransparency = 0.3
+logoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+logoButton.Font = Enum.Font.GothamBold
+logoButton.TextScaled = true
+logoButton.Draggable = true
 
-do
-	if _ENV.rz_error_message then
-		_ENV.rz_error_message:Destroy()
-	end
-	
-	local identifyexecutor = identifyexecutor or (function() return "Unknown" end)
-	
-	local function CreateMessageError(Text)
-		_ENV.loadedFarm = nil
-		_ENV.OnFarm = false
-		
-		local Message = Instance.new("Message", workspace)
-		Message.Text = string.gsub(Text, urls.Owner, "")
-		_ENV.rz_error_message = Message
-		
-		error(Text, 2)
-	end
-	
-	local function formatUrl(Url)
-		for key, path in urls do
-			if Url:find("{" .. key .. "}") then
-				return Url:gsub("{" .. key .. "}", path)
-			end
-		end
-		
-		return Url
-	end
-	
-	function fetcher.get(Url)
-		local success, response = pcall(function()
-			return game:HttpGet(formatUrl(Url))
-		end)
-		
-		if success then
-			return response
-		else
-			CreateMessageError(`[1] [{ identifyexecutor() }] failed to get http/url/raw: { Url }\n>>{ response }<<`)
-		end
-	end
-	
-	function fetcher.load(Url: string, concat: string?)
-		local raw = fetcher.get(Url) .. (if concat then concat else "")
-		local runFunction, errorText = loadstring(raw)
-		
-		if type(runFunction) ~= "function" then
-			CreateMessageError(`[2] [{ identifyexecutor() }] sintax error: { Url }\n>>{ errorText }<<`)
-		else
-			return runFunction
-		end
-	end
-end
+local UICornerLogo = Instance.new("UICorner", logoButton)
+UICornerLogo.CornerRadius = UDim.new(0, 12)
 
-local function IsPlace(Script)
-	if Script.PlacesIds and table.find(Script.PlacesIds, game.PlaceId) then
-		return true
-	elseif Script.GameId and Script.GameId == game.GameId then
-		return true
-	end
-end
+local menu = Instance.new("Frame", gui)
+menu.Size = UDim2.new(0, 400, 0, 300)
+menu.Position = UDim2.new(0.5, -200, 0.5, -150)
+menu.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+menu.BackgroundTransparency = 0.25
+menu.Visible = false
+menu.Active = true
+menu.Draggable = true
 
-for _, Script in Scripts do
-	if IsPlace(Script) then
-		return fetcher.load("{Repository}Games/" .. Script.UrlPath)(fetcher, ...)
-	end
+local UICornerMenu = Instance.new("UICorner", menu)
+UICornerMenu.CornerRadius = UDim.new(0, 18)
+
+local title = Instance.new("TextLabel", menu)
+title.Size = UDim2.new(1, 0, 0.15, 0)
+title.Text = "SANSARSV2xFARM PANEL"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+logoButton.MouseButton1Click:Connect(function()
+    menu.Visible = not menu.Visible
+end)
+
+-- Auto Bones Farm
+spawn(function()
+    while true do
+        pcall(function()
+            local remote = game:GetService("ReplicatedStorage").Remotes.CommF_
+            remote:InvokeServer("TravelHauntedCastle")
+            wait(2)
+            for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame + Vector3.new(0,5,0)
+                    remote:InvokeServer("EnableObservationHaki")
+                end
+            end
+        end)
+        wait(5)
+    end
+end)
+
+-- ESP Player
+spawn(function()
+    while true do
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if not player.Character:FindFirstChild("ESP") then
+                    local esp = Instance.new("BillboardGui", player.Character.HumanoidRootPart)
+                    esp.Name = "ESP"
+                    esp.Size = UDim2.new(0, 100, 0, 30)
+                    esp.AlwaysOnTop = true
+                    local label = Instance.new("TextLabel", esp)
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.Text = "👤 " .. player.Name
+                    label.TextColor3 = Color3.fromRGB(255, 0, 0)
+                    label.Font = Enum.Font.GothamBold
+                    label.TextScaled = true
+                end
+            end
         end
+        wait(3)
+    end
+end)
+
+-- ESP Fruit
+spawn(function()
+    while true do
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("Tool") and obj:FindFirstChild("Handle") and not obj.Handle:FindFirstChild("FruitESP") then
+                local esp = Instance.new("BillboardGui", obj.Handle)
+                esp.Name = "FruitESP"
+                esp.Size = UDim2.new(0, 100, 0, 30)
+                esp.AlwaysOnTop = true
+                local label = Instance.new("TextLabel", esp)
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.Text = "🍍 " .. obj.Name
+                label.TextColor3 = Color3.fromRGB(0, 255, 0)
+                label.Font = Enum.Font.GothamBold
+                label.TextScaled = true
+            end
+        end
+        wait(5)
+    end
+end)
+
+-- Aimbot Skill
+spawn(function()
+    while true do
+        pcall(function()
+            local target = nil
+            local shortest = math.huge
+            for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                    local dist = (mob.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                    if dist < shortest then
+                        shortest = dist
+                        target = mob
+                    end
+                end
+            end
+            if target then
+                game:GetService("VirtualInputManager"):SendMouseButtonEvent(target.HumanoidRootPart.Position.X, target.HumanoidRootPart.Position.Y, 0, true, game, 0)
+            end
+        end)
+        wait(1)
+    end
+end)
