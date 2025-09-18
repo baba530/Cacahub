@@ -1,9 +1,12 @@
-local gui = Instance.new("ScreenGui", game.CoreGui)
+local gui = Instance.new("ScreenGui")
+gui.Name = "CacahubGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
 local logoButton = Instance.new("TextButton", gui)
 logoButton.Size = UDim2.new(0, 200, 0, 50)
 logoButton.Position = UDim2.new(0.85, 0, 0.15, 0)
-logoButton.Text = "SANSARSV2xFARM"
+logoButton.Text = "Cacahub"
 logoButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 logoButton.BackgroundTransparency = 0.3
 logoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -28,7 +31,7 @@ UICornerMenu.CornerRadius = UDim.new(0, 18)
 
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0.1, 0)
-title.Text = "SANSARSV2xFARM PANEL"
+title.Text = "Cacahub v1 Panel"
 title.TextColor3 = Color3.fromRGB(255,255,255)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
@@ -36,17 +39,7 @@ title.TextScaled = true
 
 logoButton.MouseButton1Click:Connect(function()
     menu.Visible = not menu.Visible
-end)local raidEnabled = false
-
-local raidButton = Instance.new("TextButton", menu)
-raidButton.Size = UDim2.new(1, -20, 0.08, 0)
-raidButton.Position = UDim2.new(0, 10, 0.92, 0)
-raidButton.Text = "Auto Raid: OFF"
-raidButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-raidButton.TextColor3 = Color3.fromRGB(255,255,255)
-raidButton.Font = Enum.Font.Gotham
-raidButton.TextScaled = true
-
+end)
 raidButton.MouseButton1Click:Connect(function()
     raidEnabled = not raidEnabled
     raidButton.Text = "Auto Raid: " .. (raidEnabled and "ON" or "OFF")
